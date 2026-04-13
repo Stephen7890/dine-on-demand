@@ -5,26 +5,33 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.util.List;
 
 public class DineOnDemandApp extends JFrame {
     private final OrderManager orderManager;
     private final List<MenuItem> menuItems;
     
-    // UI Colors - FlatLaf Compatible Palette
-    private static final Color PRIMARY_BG = new Color(245, 246, 250);
+    // UI Colors - Black & White Theme
+    private static final Color PRIMARY_BG = Color.WHITE;
     private static final Color SECONDARY_BG = Color.WHITE;
-    private static final Color ACCENT_COLOR = new Color(52, 152, 219);
-    private static final Color SUCCESS_COLOR = new Color(46, 204, 113);
-    private static final Color DANGER_COLOR = new Color(231, 76, 60);
-    private static final Color TEXT_COLOR = new Color(44, 62, 80);
-    private static final Color TEXT_LIGHT = new Color(127, 140, 141);
+    private static final Color ACCENT_COLOR = Color.BLACK;
+    private static final Color SUCCESS_COLOR = Color.BLACK;
+    private static final Color DANGER_COLOR = new Color(240, 240, 240);
+    private static final Color TEXT_COLOR = Color.BLACK;
+    private static final Color TEXT_LIGHT = new Color(150, 150, 150);
+    private static final Color BORDER_LIGHT = new Color(240, 240, 240);
 
-    // Fonts
-    private static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 22);
-    private static final Font SUBTITLE_FONT = new Font("Segoe UI", Font.BOLD, 14);
-    private static final Font NORMAL_FONT = new Font("Segoe UI", Font.PLAIN, 13);
-    private static final Font BUTTON_FONT = new Font("Segoe UI", Font.BOLD, 12);
+    // Fonts - Geist Custom Font
+    private static Font GEIST_BOLD;
+    private static Font GEIST_MEDIUM;
+    private static Font GEIST_REGULAR;
+    
+    private static Font HERO_FONT;
+    private static Font TITLE_FONT;
+    private static Font SUBTITLE_FONT;
+    private static Font NORMAL_FONT;
+    private static Font BUTTON_FONT;
 
     // UI Components
     private JTable orderTable;
@@ -37,47 +44,80 @@ public class DineOnDemandApp extends JFrame {
     private JRadioButton takeOutButton;
 
     public DineOnDemandApp() {
+        loadCustomFonts();
         // Initialize FlatLaf for a modern look
         try {
             FlatLightLaf.setup();
             // Global UI Customizations
-            UIManager.put("Button.arc", 15);
-            UIManager.put("Component.arc", 15);
-            UIManager.put("TextComponent.arc", 15);
-            UIManager.put("Table.selectionBackground", new Color(232, 244, 253));
+            UIManager.put("Button.arc", 6);
+            UIManager.put("Component.arc", 12);
+            UIManager.put("TextComponent.arc", 6);
+            UIManager.put("Table.selectionBackground", new Color(245, 245, 245));
+            UIManager.put("Table.selectionForeground", Color.BLACK);
             UIManager.put("ScrollBar.thumbArc", 999);
-            UIManager.put("ScrollBar.width", 10);
+            UIManager.put("ScrollBar.width", 8);
         } catch (Exception e) {
             System.err.println("Failed to initialize FlatLaf");
         }
 
         this.orderManager = new OrderManager();
         this.menuItems = MenuData.getInitialMenu();
-        
         initializeUI();
+    }
+
+    private void loadCustomFonts() {
+        try {
+            GEIST_BOLD = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Geist-Bold.ttf"));
+            GEIST_MEDIUM = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Geist-Medium.ttf"));
+            GEIST_REGULAR = Font.createFont(Font.TRUETYPE_FONT, new File("fonts/Geist-Regular.ttf"));
+            
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(GEIST_BOLD);
+            ge.registerFont(GEIST_MEDIUM);
+            ge.registerFont(GEIST_REGULAR);
+
+            HERO_FONT = GEIST_BOLD.deriveFont(32f);
+            TITLE_FONT = GEIST_BOLD.deriveFont(24f);
+            SUBTITLE_FONT = GEIST_BOLD.deriveFont(16f);
+            NORMAL_FONT = GEIST_REGULAR.deriveFont(14f);
+            BUTTON_FONT = GEIST_MEDIUM.deriveFont(13f);
+        } catch (Exception e) {
+            System.err.println("Could not load Geist fonts, falling back to Segoe UI");
+            HERO_FONT = new Font("Segoe UI", Font.BOLD, 32);
+            TITLE_FONT = new Font("Segoe UI", Font.BOLD, 24);
+            SUBTITLE_FONT = new Font("Segoe UI", Font.BOLD, 16);
+            NORMAL_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+            BUTTON_FONT = new Font("Segoe UI", Font.BOLD, 13);
+        }
     }
 
     private void initializeUI() {
         setTitle("DineOn-Demand POS");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1100, 750);
+        setSize(1000, 800);
         getContentPane().setBackground(PRIMARY_BG);
-        setLayout(new BorderLayout(20, 20));
+        setLayout(new BorderLayout(0, 0));
 
         // Header Panel
         add(createHeader(), BorderLayout.NORTH);
 
-        // LEFT: Menu Panel (with padding)
-        JPanel menuContainer = new JPanel(new BorderLayout());
+        // LEFT: Menu Panel (Centered)
+        JPanel menuContainer = new JPanel(new GridBagLayout());
         menuContainer.setOpaque(false);
-        menuContainer.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 0));
         
         JPanel menuPanel = createMenuPanel();
         JScrollPane menuScroll = new JScrollPane(menuPanel);
         menuScroll.setBorder(null);
+        menuScroll.getVerticalScrollBar().setUnitIncrement(20);
         menuScroll.getViewport().setOpaque(false);
         menuScroll.setOpaque(false);
-        menuContainer.add(menuScroll, BorderLayout.CENTER);
+        
+        // Ensure the scroll pane takes the available space but content is centered
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        menuContainer.add(menuScroll, gbc);
         
         add(menuContainer, BorderLayout.CENTER);
 
@@ -88,7 +128,7 @@ public class DineOnDemandApp extends JFrame {
         // Footer
         JPanel footer = new JPanel();
         footer.setBackground(SECONDARY_BG);
-        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(220, 221, 225)));
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER_LIGHT));
         JLabel footerLabel = new JLabel("DineOn-Demand: A New Era in Meal Accessibility");
         footerLabel.setFont(new Font("Segoe UI", Font.ITALIC, 11));
         footerLabel.setForeground(TEXT_LIGHT);
@@ -101,68 +141,110 @@ public class DineOnDemandApp extends JFrame {
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(SECONDARY_BG);
-        header.setPreferredSize(new Dimension(0, 70));
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 221, 225)));
+        header.setPreferredSize(new Dimension(0, 80));
+        header.setBorder(BorderFactory.createEmptyBorder(10, 40, 0, 40));
 
-        JLabel logo = new JLabel("  DINEON-DEMAND");
+        // Logo Stylized
+        JLabel logo = new JLabel("DINEON");
         logo.setFont(TITLE_FONT);
-        logo.setForeground(ACCENT_COLOR);
         header.add(logo, BorderLayout.WEST);
 
-        JPanel info = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 20));
-        info.setOpaque(false);
+        // Simple Date Info (Alternative to "random things")
         JLabel dateLabel = new JLabel(java.time.LocalDate.now().toString());
         dateLabel.setFont(NORMAL_FONT);
         dateLabel.setForeground(TEXT_LIGHT);
-        info.add(dateLabel);
-        header.add(info, BorderLayout.EAST);
+        header.add(dateLabel, BorderLayout.EAST);
 
         return header;
     }
 
     private JPanel createMenuPanel() {
-        JPanel panel = new JPanel(new GridLayout(0, 3, 15, 15));
-        panel.setOpaque(false);
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setOpaque(false);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 40, 60, 40));
 
-        for (MenuItem item : menuItems) {
-            panel.add(new MenuItemPanel(item));
+        // Get Categories
+        List<String> categories = menuItems.stream()
+                .map(MenuItem::getCategory)
+                .distinct()
+                .toList();
+
+        for (String category : categories) {
+            // Category Header
+            JLabel header = new JLabel(category);
+            header.setFont(TITLE_FONT);
+            header.setBorder(BorderFactory.createEmptyBorder(10, 0, 15, 0));
+            header.setAlignmentX(Component.LEFT_ALIGNMENT);
+            mainPanel.add(header);
+
+            // Grid Layout for items in this category - updated to 3 columns
+            JPanel grid = new JPanel(new GridLayout(0, 3, 30, 30));
+            grid.setOpaque(false);
+            grid.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            for (MenuItem item : menuItems) {
+                if (item.getCategory().equals(category)) {
+                    grid.add(new MenuItemPanel(item));
+                }
+            }
+            mainPanel.add(grid);
         }
-        return panel;
+
+        return mainPanel;
     }
 
     // New Inner Class for Item Cards
     private class MenuItemPanel extends JPanel {
         private final MenuItem item;
+        private int selectionQty = 1;
         private final JLabel qtyLabel;
-        private int selectionQty = 1; // Local selector
 
         public MenuItemPanel(MenuItem item) {
             this.item = item;
             setLayout(new BorderLayout(8, 8));
-            setBackground(SECONDARY_BG);
+            setBackground(new Color(248, 248, 248)); // Slight gray background
+            setPreferredSize(new Dimension(180, 320));
+            
+            // Modern Border / Card Look with More Pronounced Round Corners
             setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
-                BorderFactory.createEmptyBorder(12, 12, 12, 12)
+                new com.formdev.flatlaf.ui.FlatLineBorder(new Insets(1, 1, 1, 1), new Color(235, 235, 235), 1, 25),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
             ));
 
-            // Info Area (North)
-            JPanel infoPanel = new JPanel(new GridLayout(2, 1));
-            infoPanel.setOpaque(false);
-            JLabel nameLabel = new JLabel(item.getName());
-            nameLabel.setFont(SUBTITLE_FONT);
-            JLabel priceLabel = new JLabel(String.format("₱%.2f", item.getPrice()));
-            priceLabel.setFont(NORMAL_FONT);
-            priceLabel.setForeground(ACCENT_COLOR);
-            infoPanel.add(nameLabel);
-            infoPanel.add(priceLabel);
-            add(infoPanel, BorderLayout.NORTH);
+            // Square Image Placeholder filling the card width (180 - 20 padding)
+            JPanel imagePlaceholder = new JPanel(new BorderLayout());
+            imagePlaceholder.setPreferredSize(new Dimension(160, 160));
+            imagePlaceholder.setBackground(Color.WHITE);
+            // No icon labels or borders to avoid "rectangle thingy" artifacts
+            
+            add(imagePlaceholder, BorderLayout.NORTH);
 
-            // Controls Area (Center)
+            // Container for Information & Controls
+            JPanel contentPanel = new JPanel();
+            contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+            contentPanel.setOpaque(false);
+
+            JLabel nameLabel = new JLabel(item.getName());
+            nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            JLabel priceLabel = new JLabel(String.format("₱%.2f", item.getPrice()));
+            priceLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            priceLabel.setForeground(TEXT_LIGHT);
+            priceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            contentPanel.add(nameLabel);
+            contentPanel.add(Box.createVerticalStrut(2));
+            contentPanel.add(priceLabel);
+            contentPanel.add(Box.createVerticalStrut(15));
+
+            // Controls Area (+/-)
             JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
             controls.setOpaque(false);
             
             JButton minusBtn = new JButton("-");
-            styleControlBtn(minusBtn, DANGER_COLOR);
+            styleControlBtn(minusBtn);
             minusBtn.addActionListener(e -> {
                 if (selectionQty > 1) {
                     selectionQty--;
@@ -176,7 +258,7 @@ public class DineOnDemandApp extends JFrame {
             qtyLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
             JButton plusBtn = new JButton("+");
-            styleControlBtn(plusBtn, SUCCESS_COLOR);
+            styleControlBtn(plusBtn);
             plusBtn.addActionListener(e -> {
                 selectionQty++;
                 updateQtyDisplay();
@@ -185,41 +267,36 @@ public class DineOnDemandApp extends JFrame {
             controls.add(minusBtn);
             controls.add(qtyLabel);
             controls.add(plusBtn);
-            add(controls, BorderLayout.CENTER);
+            contentPanel.add(controls);
+            contentPanel.add(Box.createVerticalStrut(15));
 
-            // Add to Order Button (South)
+            // Add to Order Button
             JButton addBtn = new JButton("Add to Order");
             stylePrimaryButton(addBtn);
-            addBtn.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            addBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            addBtn.setPreferredSize(new Dimension(140, 40));
+            addBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+            addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
             addBtn.addActionListener(e -> {
                 orderManager.addItem(item, selectionQty);
                 updateOrderDisplay();
-                // Reset to 1 after adding
                 selectionQty = 1;
                 updateQtyDisplay();
             });
-            add(addBtn, BorderLayout.SOUTH);
+            contentPanel.add(addBtn);
 
-            // Hover decoration only (no click action on card body)
-            addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseEntered(java.awt.event.MouseEvent e) {
-                    setBackground(new Color(250, 251, 252));
-                }
-                @Override
-                public void mouseExited(java.awt.event.MouseEvent e) {
-                    setBackground(SECONDARY_BG);
-                }
-            });
+            add(contentPanel, BorderLayout.CENTER);
         }
 
-        private void styleControlBtn(JButton btn, Color color) {
-            btn.setPreferredSize(new Dimension(30, 30));
+        private void styleControlBtn(JButton btn) {
+            btn.setPreferredSize(new Dimension(32, 32));
             btn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            btn.setForeground(color);
-            btn.setBackground(SECONDARY_BG);
+            btn.setForeground(ACCENT_COLOR);
+            btn.setBackground(new Color(230, 230, 230));
             btn.setFocusPainted(false);
             btn.putClientProperty("JButton.buttonType", "roundRect");
+            btn.putClientProperty("JButton.arc", 6);
+            btn.setBorderPainted(false);
             btn.setMargin(new Insets(0, 0, 0, 0));
         }
 
@@ -228,23 +305,17 @@ public class DineOnDemandApp extends JFrame {
         }
     }
 
+
     private void refreshMenuCards() {
-        // Find the menu panel container and force repainting of labels
-        // For simplicity in this structure, we'll just trigger a global refresh approach
-        // though a more efficient way would be using a Registry of cards.
-        Component[] components = ((JPanel)((JScrollPane)((JPanel)getContentPane().getComponent(1)).getComponent(0)).getViewport().getView()).getComponents();
-        for (Component c : components) {
-            if (c instanceof MenuItemPanel) {
-                ((MenuItemPanel) c).updateQtyDisplay();
-            }
-        }
+        // Updated to reflect new card design if needed, but simplified for now
+        repaint();
     }
 
     private JPanel createRightPanel() {
         JPanel container = new JPanel(new BorderLayout(0, 0));
-        container.setPreferredSize(new Dimension(420, 0));
+        container.setPreferredSize(new Dimension(380, 0));
         container.setBackground(SECONDARY_BG);
-        container.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, new Color(220, 221, 225)));
+        container.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, BORDER_LIGHT));
 
         JLabel title = new JLabel("Current Order");
         title.setFont(SUBTITLE_FONT);
@@ -266,6 +337,7 @@ public class DineOnDemandApp extends JFrame {
 
         JScrollPane tableScroll = new JScrollPane(orderTable);
         tableScroll.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        tableScroll.getVerticalScrollBar().setUnitIncrement(16);
         tableScroll.getViewport().setBackground(SECONDARY_BG);
         container.add(tableScroll, BorderLayout.CENTER);
 
@@ -302,6 +374,7 @@ public class DineOnDemandApp extends JFrame {
         discIco.setFont(NORMAL_FONT);
         discPanel.add(discIco, BorderLayout.WEST);
         discountCombo = new JComboBox<>(new String[]{"None", "Senior Citizen (20%)", "PWD (20%)", "Promo Code (10%)"});
+        discountCombo.setPreferredSize(new Dimension(0, 40));
         discountCombo.addActionListener(this::applyDiscountShortcut);
         discPanel.add(discountCombo, BorderLayout.CENTER);
         controls.add(discPanel, gbc);
@@ -311,7 +384,7 @@ public class DineOnDemandApp extends JFrame {
         JPanel totalsPanel = new JPanel(new GridLayout(3, 2, 0, 5));
         totalsPanel.setOpaque(false);
         totalsPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 1, 0, new Color(240, 240, 240)),
+            BorderFactory.createMatteBorder(1, 0, 1, 0, BORDER_LIGHT),
             BorderFactory.createEmptyBorder(15, 0, 15, 0)
         ));
 
@@ -360,7 +433,7 @@ public class DineOnDemandApp extends JFrame {
         header.setPreferredSize(new Dimension(0, 40));
         header.setBackground(SECONDARY_BG);
         header.setForeground(TEXT_LIGHT);
-        header.setFont(SUBTITLE_FONT);
+        header.setFont(NORMAL_FONT.deriveFont(12f));
         
         // Alignments
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -386,22 +459,27 @@ public class DineOnDemandApp extends JFrame {
     }
 
     private void stylePrimaryButton(JButton button) {
-        button.setBackground(SUCCESS_COLOR);
+        button.setBackground(ACCENT_COLOR);
         button.setForeground(Color.WHITE);
         button.setFont(BUTTON_FONT);
+        button.setPreferredSize(new Dimension(80, 40));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.putClientProperty("JButton.buttonType", "roundRect");
+        button.putClientProperty("JButton.arc", 6);
+        button.setBorderPainted(false);
     }
 
     private void styleSecondaryButton(JButton button) {
-        button.setBackground(SECONDARY_BG);
-        button.setForeground(DANGER_COLOR);
+        button.setBackground(Color.WHITE);
+        button.setForeground(ACCENT_COLOR);
         button.setFont(BUTTON_FONT);
+        button.setPreferredSize(new Dimension(80, 40));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.putClientProperty("JButton.buttonType", "roundRect");
-        button.putClientProperty("JButton.outlineColor", DANGER_COLOR);
+        button.putClientProperty("JButton.arc", 6);
+        button.setBorderPainted(false);
     }
 
     private void addItemToOrder(MenuItem item) {
@@ -479,9 +557,11 @@ public class DineOnDemandApp extends JFrame {
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             JButton btn = new JButton("Remove");
             btn.setFont(new Font("Segoe UI", Font.BOLD, 10));
-            btn.setForeground(DANGER_COLOR);
+            btn.setForeground(ACCENT_COLOR);
             btn.setFocusPainted(false);
             btn.putClientProperty("JButton.buttonType", "roundRect");
+            btn.putClientProperty("JButton.arc", 6);
+            btn.setBorderPainted(false);
             return btn;
         }
     }
