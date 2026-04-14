@@ -125,52 +125,119 @@ public class DineOnDemandApp extends JFrame {
         panel.setOpaque(false);
 
         for (MenuItem item : menuItems) {
-            JButton itemButton = createMenuItemButton(item);
-            panel.add(itemButton);
+            panel.add(new MenuItemPanel(item));
         }
         return panel;
     }
 
-    private JButton createMenuItemButton(MenuItem item) {
-        String content = String.format(
-            "<html><div style='text-align: center; width: 100px;'>" +
-            "<span style='font-size: 11px; color: #7f8c8d;'>%s</span><br>" +
-            "<b style='font-size: 13px; color: #2c3e50;'>%s</b><br>" +
-            "<span style='font-size: 14px; color: #3498db;'>₱%.2f</span>" +
-            "</div></html>", 
-            item.getCategory(), item.getName(), item.getPrice()
-        );
-        
-        JButton button = new JButton(content);
-        button.setPreferredSize(new Dimension(140, 110));
-        button.setBackground(SECONDARY_BG);
-        button.setForeground(TEXT_COLOR);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 221, 225), 1),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        
-        // Hover Effect
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(240, 248, 255));
-                button.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(ACCENT_COLOR, 1),
-                    BorderFactory.createEmptyBorder(10, 10, 10, 10)
-                ));
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(SECONDARY_BG);
-                button.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(220, 221, 225), 1),
-                    BorderFactory.createEmptyBorder(10, 10, 10, 10)
-                ));
-            }
-        });
+    // New Inner Class for Item Cards
+    private class MenuItemPanel extends JPanel {
+        private final MenuItem item;
+        private final JLabel qtyLabel;
+        private int selectionQty = 1; // Local selector
 
-        button.addActionListener(e -> addItemToOrder(item));
-        return button;
+        public MenuItemPanel(MenuItem item) {
+            this.item = item;
+            setLayout(new BorderLayout(8, 8));
+            setBackground(SECONDARY_BG);
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
+                BorderFactory.createEmptyBorder(12, 12, 12, 12)
+            ));
+
+            // Info Area (North)
+            JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+            infoPanel.setOpaque(false);
+            JLabel nameLabel = new JLabel(item.getName());
+            nameLabel.setFont(SUBTITLE_FONT);
+            JLabel priceLabel = new JLabel(String.format("₱%.2f", item.getPrice()));
+            priceLabel.setFont(NORMAL_FONT);
+            priceLabel.setForeground(ACCENT_COLOR);
+            infoPanel.add(nameLabel);
+            infoPanel.add(priceLabel);
+            add(infoPanel, BorderLayout.NORTH);
+
+            // Controls Area (Center)
+            JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+            controls.setOpaque(false);
+            
+            JButton minusBtn = new JButton("-");
+            styleControlBtn(minusBtn, DANGER_COLOR);
+            minusBtn.addActionListener(e -> {
+                if (selectionQty > 1) {
+                    selectionQty--;
+                    updateQtyDisplay();
+                }
+            });
+
+            qtyLabel = new JLabel("1");
+            qtyLabel.setFont(SUBTITLE_FONT);
+            qtyLabel.setPreferredSize(new Dimension(30, 30));
+            qtyLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+            JButton plusBtn = new JButton("+");
+            styleControlBtn(plusBtn, SUCCESS_COLOR);
+            plusBtn.addActionListener(e -> {
+                selectionQty++;
+                updateQtyDisplay();
+            });
+
+            controls.add(minusBtn);
+            controls.add(qtyLabel);
+            controls.add(plusBtn);
+            add(controls, BorderLayout.CENTER);
+
+            // Add to Order Button (South)
+            JButton addBtn = new JButton("Add to Order");
+            stylePrimaryButton(addBtn);
+            addBtn.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            addBtn.addActionListener(e -> {
+                orderManager.addItem(item, selectionQty);
+                updateOrderDisplay();
+                // Reset to 1 after adding
+                selectionQty = 1;
+                updateQtyDisplay();
+            });
+            add(addBtn, BorderLayout.SOUTH);
+
+            // Hover decoration only (no click action on card body)
+            addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    setBackground(new Color(250, 251, 252));
+                }
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    setBackground(SECONDARY_BG);
+                }
+            });
+        }
+
+        private void styleControlBtn(JButton btn, Color color) {
+            btn.setPreferredSize(new Dimension(30, 30));
+            btn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            btn.setForeground(color);
+            btn.setBackground(SECONDARY_BG);
+            btn.setFocusPainted(false);
+            btn.putClientProperty("JButton.buttonType", "roundRect");
+            btn.setMargin(new Insets(0, 0, 0, 0));
+        }
+
+        public void updateQtyDisplay() {
+            qtyLabel.setText(String.valueOf(selectionQty));
+        }
+    }
+
+    private void refreshMenuCards() {
+        // Find the menu panel container and force repainting of labels
+        // For simplicity in this structure, we'll just trigger a global refresh approach
+        // though a more efficient way would be using a Registry of cards.
+        Component[] components = ((JPanel)((JScrollPane)((JPanel)getContentPane().getComponent(1)).getComponent(0)).getViewport().getView()).getComponents();
+        for (Component c : components) {
+            if (c instanceof MenuItemPanel) {
+                ((MenuItemPanel) c).updateQtyDisplay();
+            }
+        }
     }
 
     private JPanel createRightPanel() {
@@ -184,15 +251,19 @@ public class DineOnDemandApp extends JFrame {
         title.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
         container.add(title, BorderLayout.NORTH);
 
-        // Table Styling
-        String[] columnNames = {"Item", "Price", "Qty", "Total"};
+        // Table Styling - Adding "Action" column
+        String[] columnNames = {"Item", "Price", "Qty", "Total", "Action"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) { return column == 4; }
         };
         orderTable = new JTable(tableModel);
         styleTable(orderTable);
         
+        // Add Button to Table Column
+        orderTable.getColumnModel().getColumn(4).setCellRenderer(new TableActionRenderer());
+        orderTable.getColumnModel().getColumn(4).setCellEditor(new TableActionEditor());
+
         JScrollPane tableScroll = new JScrollPane(orderTable);
         tableScroll.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         tableScroll.getViewport().setBackground(SECONDARY_BG);
@@ -291,6 +362,7 @@ public class DineOnDemandApp extends JFrame {
         header.setForeground(TEXT_LIGHT);
         header.setFont(SUBTITLE_FONT);
         
+        // Alignments
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer); // Qty
@@ -299,6 +371,11 @@ public class DineOnDemandApp extends JFrame {
         rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
         table.getColumnModel().getColumn(1).setCellRenderer(rightRenderer); // Price
         table.getColumnModel().getColumn(3).setCellRenderer(rightRenderer); // Total
+
+        // Column Config
+        table.getColumnModel().getColumn(0).setPreferredWidth(130); // Item Name
+        table.getColumnModel().getColumn(2).setPreferredWidth(40);  // Qty
+        table.getColumnModel().getColumn(4).setMinWidth(80);        // Action Column
     }
 
     private JLabel createTotalLabel(String text, boolean isMain) {
@@ -330,6 +407,7 @@ public class DineOnDemandApp extends JFrame {
     private void addItemToOrder(MenuItem item) {
         orderManager.addItem(item, 1);
         updateOrderDisplay();
+        refreshMenuCards();
     }
 
     private void updateOrderDisplay() {
@@ -339,7 +417,8 @@ public class DineOnDemandApp extends JFrame {
                 line.getItem().getName(),
                 String.format("%.2f", line.getItem().getPrice()),
                 line.getQuantity(),
-                String.format("%.2f", line.getSubtotal())
+                String.format("%.2f", line.getSubtotal()),
+                "Remove" // Used by renderer
             });
         }
         
@@ -365,6 +444,7 @@ public class DineOnDemandApp extends JFrame {
         discountCombo.setSelectedIndex(0);
         dineInButton.setSelected(true);
         updateOrderDisplay();
+        refreshMenuCards();
     }
 
     private void processCheckout() {
@@ -391,6 +471,48 @@ public class DineOnDemandApp extends JFrame {
         }
 
         showReceipt(paymentMethod, mockDetails);
+    }
+
+    // --- Table Action Helpers ---
+    private class TableActionRenderer extends javax.swing.table.DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            JButton btn = new JButton("Remove");
+            btn.setFont(new Font("Segoe UI", Font.BOLD, 10));
+            btn.setForeground(DANGER_COLOR);
+            btn.setFocusPainted(false);
+            btn.putClientProperty("JButton.buttonType", "roundRect");
+            return btn;
+        }
+    }
+
+    private class TableActionEditor extends DefaultCellEditor {
+        private final JButton btn;
+        private int currentRow;
+
+        public TableActionEditor() {
+            super(new JCheckBox());
+            btn = new JButton("Remove");
+            btn.setFocusPainted(false);
+            btn.addActionListener(e -> {
+                String itemName = (String) tableModel.getValueAt(currentRow, 0);
+                for (MenuItem item : menuItems) {
+                    if (item.getName().equals(itemName)) {
+                        orderManager.removeItem(item);
+                        break;
+                    }
+                }
+                fireEditingStopped();
+                updateOrderDisplay();
+                refreshMenuCards();
+            });
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            this.currentRow = row;
+            return btn;
+        }
     }
 
     private void showReceipt(String method, String details) {

@@ -21,17 +21,28 @@ public class OrderManager {
         items.add(new OrderLine(item, quantity));
     }
 
-    public void updateQuantity(MenuItem item, int quantity) {
-        if (quantity <= 0) {
-            removeItem(item);
-            return;
-        }
-        for (OrderLine line : items) {
+    public void decreaseItem(MenuItem item, int quantity) {
+        for (int i = 0; i < items.size(); i++) {
+            OrderLine line = items.get(i);
             if (line.getItem().getName().equals(item.getName())) {
-                line.setQuantity(quantity);
+                int newQty = line.getQuantity() - quantity;
+                if (newQty <= 0) {
+                    items.remove(i);
+                } else {
+                    line.setQuantity(newQty);
+                }
                 return;
             }
         }
+    }
+
+    public int getQuantityForItem(MenuItem item) {
+        for (OrderLine line : items) {
+            if (line.getItem().getName().equals(item.getName())) {
+                return line.getQuantity();
+            }
+        }
+        return 0;
     }
 
     public void removeItem(MenuItem item) {
