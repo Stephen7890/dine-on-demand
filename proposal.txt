@@ -1,0 +1,63 @@
+Project Title: DineOn-Demand: A New Era in Meal Accessibility
+
+
+Project Objectives:
+
+General Objectives: 
+
+The main objective of this system is to develop an efficient and user-friendly ordering system, where customers will be able to select multiple orders, view available discounts and promos, choose whether to dine-in or takeout foods, and complete payments through various methods such as cash, GCash, or card. The system also aims to record, display, and manage orders including editing, deleting and displaying the customer’s order summary while automatically calculating the total value and applying applicable discounts to ensure a smooth and organized ordering process. 
+
+
+Specific Objectives:
+
+1) To Allow the user to choose multiple orders
+
+2) To Receive and record the user’s order
+
+3) To Display the order summary
+
+4) To Display the order receipt
+
+5) To View available discounts and promos
+
+6) To Apply discounts (PWD, promos)
+
+7) To Choose between dine-in or take-out
+
+8) To Accept payment through cash, GCash, or card
+
+9) To Calculate the total value of all ordered items
+
+
+Scope:
+
+The user will be able to choose multiple orders by selecting items from the available menu until they finalize their selection.
+
+The system will receive and record the user’s orders by storing the selected items and their corresponding quantities.
+
+The system will display the order summary to show the list of ordered items, quantities, and prices before payment.
+
+The system will display the order receipt after payment to confirm the completed transaction.
+
+The user will be able to view available discounts and promos that can be applied to their orders.
+
+The system will apply discounts (PWD, promos) automatically once the user qualifies or chooses the applicable discount. 
+
+The user will be able to choose between dine-in or take-out options before finalizing the order. 
+
+The system will accept payments through cash, GCash, or card as chosen by the user. 
+
+The system will automatically calculate the total value of all ordered items, including applied discounts, to ensure correct billing.
+
+
+Limitations:
+
+Cannot Handle multiple customer transactions.
+
+Database for stocks
+
+Sales report 
+
+The user will be able to edit or delete orders before completing the transaction to ensure accuracy. 
+
+It is not capable of validating whether the G-cash number or credit card number is legitimate
