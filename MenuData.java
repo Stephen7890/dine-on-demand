@@ -15,7 +15,6 @@ public class MenuData {
         menu.add(new MenuItem("Mineral Water", 20.00, "Drinks", "images/item_placeholder.jpg"));
         menu.add(new MenuItem("Choco Sundae", 55.00, "Desserts", "images/item_placeholder.jpg"));
         menu.add(new MenuItem("Apple Pie", 65.00, "Desserts", "images/item_placeholder.jpg"));
-        menu.add(new MenuItem("Apple Pie", 65.00, "Desserts", "images/sched1.png"));
         return menu;
     }
 }
