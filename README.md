@@ -1,9 +1,12 @@
 # DineOn-Demand
 
 ## Compile the project source code
-
-javac -cp ".:lib/flatlaf.jar" *.java
-
+### Linux
+`javac -cp ".:lib/flatlaf.jar" *.java`
+### Windows
+`javac -cp ".;lib/flatlaf.jar" *.java`
 ## Run the project
-
-java -cp ".:lib/flatlaf.jar" DineOnDemandApp
+### Linux
+`java -cp ".:lib/flatlaf.jar" DineOnDemandApp`
+### Windows 
+`java -cp ".;lib/flatlaf.jar" DineOnDemandApp`

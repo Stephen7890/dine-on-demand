@@ -218,7 +218,7 @@ public class DineOnDemandApp extends JFrame {
             imagePlaceholder.setBackground(Color.WHITE);
             
             try {
-                java.io.File imgFile = new java.io.File("images/item_placeholder.jpg");
+                java.io.File imgFile = new java.io.File(item.getImage());
                 if (imgFile.exists()) {
                     ImageIcon icon = new ImageIcon(imgFile.getAbsolutePath());
                     Image img = icon.getImage().getScaledInstance(160, 160, Image.SCALE_SMOOTH);
