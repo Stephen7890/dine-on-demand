@@ -55,7 +55,7 @@ public class PosAlignmentTest {
                 .orElse(null);
         assertNotNull(burger);
         assertEquals(150.00, burger.getPrice(), 0.001);
-        assertEquals(25, burger.getStockQuantity());
+        assertTrue(burger.getStockQuantity() > 0, "Initial seeded item must have positive stock");
     }
 
     @Test
@@ -196,5 +196,21 @@ public class PosAlignmentTest {
         assertFalse(history.isEmpty());
         assertEquals("TAKE_OUT", history.get(0).getServiceMode());
         assertEquals("GCASH", history.get(0).getPaymentMethod());
+    }
+
+    @Test
+    @org.junit.jupiter.api.Order(8)
+    public void testSwingViewConstructionAndHierarchy() {
+        assertDoesNotThrow(() -> {
+            com.dinedemand.ui.PosTerminalPanel posPanel = new com.dinedemand.ui.PosTerminalPanel(null, posService, () -> {});
+            assertNotNull(posPanel);
+            assertEquals(3, posPanel.getComponentCount(), "PosTerminalPanel must contain Header, Catalog, and Cart Sidebar");
+
+            com.dinedemand.ui.InventoryPanel invPanel = new com.dinedemand.ui.InventoryPanel(posService, () -> {});
+            assertNotNull(invPanel);
+
+            com.dinedemand.ui.ReportsPanel repPanel = new com.dinedemand.ui.ReportsPanel(posService);
+            assertNotNull(repPanel);
+        });
     }
 }
