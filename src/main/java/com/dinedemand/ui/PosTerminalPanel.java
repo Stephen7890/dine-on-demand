@@ -153,13 +153,14 @@ public class PosTerminalPanel extends JPanel {
 
     private JPanel createCatalogPanel() {
         JPanel catalogPanel = new JPanel(new BorderLayout(0, 12));
-        catalogPanel.setOpaque(false);
+        catalogPanel.setOpaque(true);
+        catalogPanel.setBackground(UIUtils.SECONDARY_BG);
         catalogPanel.setBorder(BorderFactory.createEmptyBorder(16, 20, 20, 20));
 
         // Category Pills
         categoryPillsContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         categoryPillsContainer.setOpaque(false);
-        categoryPillsContainer.setPreferredSize(new Dimension(0, 42));
+        categoryPillsContainer.setPreferredSize(new Dimension(800, 44));
         rebuildCategoryPills();
         catalogPanel.add(categoryPillsContainer, BorderLayout.NORTH);
 
@@ -182,33 +183,38 @@ public class PosTerminalPanel extends JPanel {
     }
 
     private void rebuildCategoryPills() {
-        categoryPillsContainer.removeAll();
-        pillButtons.clear();
+        try {
+            categoryPillsContainer.removeAll();
+            pillButtons.clear();
 
-        List<String> categories = new ArrayList<>();
-        categories.add("All Items");
-        categories.addAll(posService.getCategories());
+            List<String> categories = new ArrayList<>();
+            categories.add("All Items");
+            categories.addAll(posService.getCategories());
 
-        for (String cat : categories) {
-            JButton pill = new JButton(cat);
-            pill.setFont(UIUtils.FONT_BODY_BOLD);
-            pill.setFocusPainted(false);
-            pill.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            updatePillStyle(pill, cat.equalsIgnoreCase(selectedCategory));
+            for (String cat : categories) {
+                JButton pill = new JButton(cat);
+                pill.setFont(UIUtils.FONT_BODY_BOLD);
+                pill.setFocusPainted(false);
+                pill.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                updatePillStyle(pill, cat.equalsIgnoreCase(selectedCategory));
 
-            pill.addActionListener(e -> {
-                selectedCategory = cat;
-                for (JButton b : pillButtons) {
-                    updatePillStyle(b, b.getText().equalsIgnoreCase(selectedCategory));
-                }
-                refreshCatalog();
-            });
+                pill.addActionListener(e -> {
+                    selectedCategory = cat;
+                    for (JButton b : pillButtons) {
+                        updatePillStyle(b, b.getText().equalsIgnoreCase(selectedCategory));
+                    }
+                    refreshCatalog();
+                });
 
-            pillButtons.add(pill);
-            categoryPillsContainer.add(pill);
+                pillButtons.add(pill);
+                categoryPillsContainer.add(pill);
+            }
+            categoryPillsContainer.revalidate();
+            categoryPillsContainer.repaint();
+        } catch (Exception e) {
+            System.err.println("Error rebuilding category pills: " + e.getMessage());
+            e.printStackTrace();
         }
-        categoryPillsContainer.revalidate();
-        categoryPillsContainer.repaint();
     }
 
     private void updatePillStyle(JButton pill, boolean active) {
@@ -232,27 +238,32 @@ public class PosTerminalPanel extends JPanel {
     }
 
     public void refreshCatalog() {
-        cardsGrid.removeAll();
-        List<MenuItem> items = posService.getCatalog(selectedCategory, currentSearchQuery);
+        try {
+            cardsGrid.removeAll();
+            List<MenuItem> items = posService.getCatalog(selectedCategory, currentSearchQuery);
 
-        if (items.isEmpty()) {
-            JPanel emptyPanel = new JPanel(new GridBagLayout());
-            emptyPanel.setOpaque(false);
-            JLabel emptyLabel = new JLabel("No menu items found.");
-            emptyLabel.setFont(UIUtils.FONT_TITLE);
-            emptyLabel.setForeground(UIUtils.TEXT_MUTED);
-            emptyPanel.add(emptyLabel);
-            cardsGrid.setLayout(new BorderLayout());
-            cardsGrid.add(emptyPanel, BorderLayout.CENTER);
-        } else {
-            cardsGrid.setLayout(new GridLayout(0, 3, 16, 16));
-            for (MenuItem item : items) {
-                cardsGrid.add(new ProductCard(item));
+            if (items.isEmpty()) {
+                JPanel emptyPanel = new JPanel(new GridBagLayout());
+                emptyPanel.setOpaque(false);
+                JLabel emptyLabel = new JLabel("No menu items found.");
+                emptyLabel.setFont(UIUtils.FONT_TITLE);
+                emptyLabel.setForeground(UIUtils.TEXT_MUTED);
+                emptyPanel.add(emptyLabel);
+                cardsGrid.setLayout(new BorderLayout());
+                cardsGrid.add(emptyPanel, BorderLayout.CENTER);
+            } else {
+                cardsGrid.setLayout(new GridLayout(0, 3, 16, 16));
+                for (MenuItem item : items) {
+                    cardsGrid.add(new ProductCard(item));
+                }
             }
-        }
 
-        cardsGrid.revalidate();
-        cardsGrid.repaint();
+            cardsGrid.revalidate();
+            cardsGrid.repaint();
+        } catch (Exception e) {
+            System.err.println("Error refreshing catalog: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // Product Card Widget
@@ -265,6 +276,9 @@ public class PosTerminalPanel extends JPanel {
         public ProductCard(MenuItem item) {
             this.item = item;
             setLayout(new BorderLayout(0, 8));
+            setPreferredSize(new Dimension(210, 320));
+            setMinimumSize(new Dimension(190, 290));
+            setOpaque(true);
             setBackground(UIUtils.CARD_BG);
             setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(UIUtils.BORDER_LIGHT, 1),
@@ -410,7 +424,9 @@ public class PosTerminalPanel extends JPanel {
 
     private JPanel createCartSidebar() {
         JPanel sidebar = new JPanel(new BorderLayout(0, 0));
-        sidebar.setPreferredSize(new Dimension(420, 0));
+        sidebar.setPreferredSize(new Dimension(420, 820));
+        sidebar.setMinimumSize(new Dimension(380, 500));
+        sidebar.setOpaque(true);
         sidebar.setBackground(UIUtils.PRIMARY_BG);
         sidebar.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, UIUtils.BORDER_LIGHT));
 
@@ -681,6 +697,8 @@ public class PosTerminalPanel extends JPanel {
                 }
 
             } catch (Exception ex) {
+                System.err.println("Transaction checkout error: " + ex.getMessage());
+                ex.printStackTrace();
                 JOptionPane.showMessageDialog(this,
                         "Failed to record transaction:\n" + ex.getMessage(),
                         "Transaction Error", JOptionPane.ERROR_MESSAGE);

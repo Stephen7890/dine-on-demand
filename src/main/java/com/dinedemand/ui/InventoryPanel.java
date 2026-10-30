@@ -176,20 +176,25 @@ public class InventoryPanel extends JPanel {
     }
 
     public void refreshTableData() {
-        tableModel.setRowCount(0);
-        List<MenuItem> items = posService.getCatalog("All", null);
-        for (MenuItem item : items) {
-            String status = item.getStockQuantity() == 0 ? "Out of Stock" :
-                    (item.getStockQuantity() <= 5 ? "Low Stock" : "In Stock");
+        try {
+            tableModel.setRowCount(0);
+            List<MenuItem> items = posService.getCatalog("All", null);
+            for (MenuItem item : items) {
+                String status = item.getStockQuantity() == 0 ? "Out of Stock" :
+                        (item.getStockQuantity() <= 5 ? "Low Stock" : "In Stock");
 
-            tableModel.addRow(new Object[]{
-                    item.getId(),
-                    item.getName(),
-                    item.getCategory(),
-                    String.format("₱%.2f", item.getPrice()),
-                    item.getStockQuantity(),
-                    status
-            });
+                tableModel.addRow(new Object[]{
+                        item.getId(),
+                        item.getName(),
+                        item.getCategory(),
+                        String.format("₱%.2f", item.getPrice()),
+                        item.getStockQuantity(),
+                        status
+                });
+            }
+        } catch (Exception e) {
+            System.err.println("Error refreshing inventory table: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -223,6 +228,7 @@ public class InventoryPanel extends JPanel {
                         JOptionPane.showMessageDialog(this, "Successfully added " + addQty + " units to " + itemName + ".");
                     }
                 } catch (NumberFormatException ex) {
+                    ex.printStackTrace();
                     JOptionPane.showMessageDialog(this, "Invalid number entered.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -238,6 +244,7 @@ public class InventoryPanel extends JPanel {
                         JOptionPane.showMessageDialog(this, "Stock for " + itemName + " updated to " + newStock + ".");
                     }
                 } catch (NumberFormatException ex) {
+                    ex.printStackTrace();
                     JOptionPane.showMessageDialog(this, "Invalid number entered.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -270,6 +277,7 @@ public class InventoryPanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Price updated successfully.");
                 }
             } catch (NumberFormatException ex) {
+                ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Invalid price format.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -320,6 +328,7 @@ public class InventoryPanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Failed to save item.", "Database Error", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (NumberFormatException ex) {
+                ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Invalid number entered for price or stock.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         }

@@ -34,11 +34,12 @@ public class DineOnDemandApp extends JFrame {
 
         setTitle("DineOn-Demand POS - A New Era in Meal Accessibility");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 850);
-        setMinimumSize(new Dimension(1100, 700));
-        setLocationRelativeTo(null);
 
         buildLayout();
+
+        setSize(1350, 820);
+        setMinimumSize(new Dimension(1100, 700));
+        setLocationRelativeTo(null);
     }
 
     private void initSystem() {
@@ -53,46 +54,70 @@ public class DineOnDemandApp extends JFrame {
             UIManager.put("Table.selectionForeground", UIUtils.TEXT_PRIMARY);
         } catch (Exception e) {
             System.err.println("Could not configure FlatLaf: " + e.getMessage());
+            e.printStackTrace();
         }
 
         // Initialize SQLite schema and initial data
-        DatabaseManager.initializeDatabase();
+        try {
+            DatabaseManager.initializeDatabase();
+        } catch (Exception e) {
+            System.err.println("Database initialization error: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void buildLayout() {
-        JPanel root = new JPanel(new BorderLayout());
-        root.setBackground(UIUtils.PRIMARY_BG);
+        Container contentPane = getContentPane();
+        contentPane.removeAll();
+        contentPane.setLayout(new BorderLayout(0, 0));
+        contentPane.setBackground(UIUtils.PRIMARY_BG);
 
-        // 1. Slim Left Navigation Rail (~72px)
-        root.add(createNavigationRail(), BorderLayout.WEST);
+        // 1. Slim Left Navigation Rail (~74px, full height)
+        JPanel rail = createNavigationRail();
+        contentPane.add(rail, BorderLayout.WEST);
 
         // 2. Central Card Content Panel
         cardLayout = new CardLayout();
         mainContentPanel = new JPanel(cardLayout);
+        mainContentPanel.setOpaque(true);
+        mainContentPanel.setBackground(UIUtils.SECONDARY_BG);
 
-        posTerminalPanel = new PosTerminalPanel(this, posService, () -> {
-            inventoryPanel.refreshTableData();
-            reportsPanel.refreshReportData();
-        });
+        try {
+            posTerminalPanel = new PosTerminalPanel(this, posService, () -> {
+                if (inventoryPanel != null) inventoryPanel.refreshTableData();
+                if (reportsPanel != null) reportsPanel.refreshReportData();
+            });
 
-        inventoryPanel = new InventoryPanel(posService, () -> {
-            posTerminalPanel.refreshCatalog();
-        });
+            inventoryPanel = new InventoryPanel(posService, () -> {
+                if (posTerminalPanel != null) posTerminalPanel.refreshCatalog();
+            });
 
-        reportsPanel = new ReportsPanel(posService);
+            reportsPanel = new ReportsPanel(posService);
 
-        mainContentPanel.add(posTerminalPanel, "POS");
-        mainContentPanel.add(inventoryPanel, "INVENTORY");
-        mainContentPanel.add(reportsPanel, "REPORTS");
+            mainContentPanel.add(posTerminalPanel, "POS");
+            mainContentPanel.add(inventoryPanel, "INVENTORY");
+            mainContentPanel.add(reportsPanel, "REPORTS");
 
-        root.add(mainContentPanel, BorderLayout.CENTER);
-        setContentPane(root);
+            // Explicitly show the POS view
+            cardLayout.show(mainContentPanel, "POS");
+
+        } catch (Exception e) {
+            System.err.println("Fatal error constructing child panels: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        contentPane.add(mainContentPanel, BorderLayout.CENTER);
+
+        revalidate();
+        repaint();
     }
 
     private JPanel createNavigationRail() {
         JPanel rail = new JPanel(new BorderLayout());
-        rail.setPreferredSize(new Dimension(74, 0));
+        rail.setPreferredSize(new Dimension(74, 820));
+        rail.setMinimumSize(new Dimension(74, 500));
         rail.setBackground(UIUtils.SIDEBAR_BG);
+        rail.setOpaque(true);
         rail.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(30, 41, 59)));
 
         // Top Brand Icon
@@ -178,8 +203,18 @@ public class DineOnDemandApp extends JFrame {
     }
 
     public static void main(String[] args) {
+        // Fix font rendering on Linux/Wayland and X11
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
+
         SwingUtilities.invokeLater(() -> {
-            new DineOnDemandApp().setVisible(true);
+            try {
+                DineOnDemandApp app = new DineOnDemandApp();
+                app.setVisible(true);
+            } catch (Exception e) {
+                System.err.println("Failed to launch DineOnDemandApp: " + e.getMessage());
+                e.printStackTrace();
+            }
         });
     }
 }

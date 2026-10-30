@@ -247,43 +247,48 @@ public class ReportsPanel extends JPanel {
     }
 
     public void refreshReportData() {
-        ReportDAO.SalesMetric metric;
-        if ("WEEKLY".equals(selectedPeriod)) {
-            metric = posService.getWeeklySales();
-        } else if ("MONTHLY".equals(selectedPeriod)) {
-            metric = posService.getMonthlySales();
-        } else {
-            metric = posService.getDailySales();
-        }
+        try {
+            ReportDAO.SalesMetric metric;
+            if ("WEEKLY".equals(selectedPeriod)) {
+                metric = posService.getWeeklySales();
+            } else if ("MONTHLY".equals(selectedPeriod)) {
+                metric = posService.getMonthlySales();
+            } else {
+                metric = posService.getDailySales();
+            }
 
-        revenueMetricLabel.setText(metric.getFormattedRevenue());
-        ordersMetricLabel.setText(String.valueOf(metric.getTotalOrders()));
-        avgMetricLabel.setText(metric.getFormattedAverage());
+            revenueMetricLabel.setText(metric.getFormattedRevenue());
+            ordersMetricLabel.setText(String.valueOf(metric.getTotalOrders()));
+            avgMetricLabel.setText(metric.getFormattedAverage());
 
-        // Refresh Transactions Table
-        transactionsTableModel.setRowCount(0);
-        List<ReportDAO.TransactionRecord> transactions = posService.getTransactionHistory();
-        for (ReportDAO.TransactionRecord tx : transactions) {
-            transactionsTableModel.addRow(new Object[]{
-                    tx.getOrderNumber(),
-                    tx.getCreatedAt(),
-                    tx.getServiceMode().replace('_', '-'),
-                    tx.getItemCount(),
-                    tx.getDiscountType(),
-                    tx.getPaymentMethod(),
-                    tx.getFormattedTotal()
-            });
-        }
+            // Refresh Transactions Table
+            transactionsTableModel.setRowCount(0);
+            List<ReportDAO.TransactionRecord> transactions = posService.getTransactionHistory();
+            for (ReportDAO.TransactionRecord tx : transactions) {
+                transactionsTableModel.addRow(new Object[]{
+                        tx.getOrderNumber(),
+                        tx.getCreatedAt(),
+                        tx.getServiceMode().replace('_', '-'),
+                        tx.getItemCount(),
+                        tx.getDiscountType(),
+                        tx.getPaymentMethod(),
+                        tx.getFormattedTotal()
+                });
+            }
 
-        // Refresh Top Selling Items
-        topItemsTableModel.setRowCount(0);
-        List<ReportDAO.TopItem> topItems = posService.getTopSellingItems(10);
-        for (ReportDAO.TopItem item : topItems) {
-            topItemsTableModel.addRow(new Object[]{
-                    item.getItemName(),
-                    item.getUnitsSold(),
-                    item.getFormattedRevenue()
-            });
+            // Refresh Top Selling Items
+            topItemsTableModel.setRowCount(0);
+            List<ReportDAO.TopItem> topItems = posService.getTopSellingItems(10);
+            for (ReportDAO.TopItem item : topItems) {
+                topItemsTableModel.addRow(new Object[]{
+                        item.getItemName(),
+                        item.getUnitsSold(),
+                        item.getFormattedRevenue()
+                });
+            }
+        } catch (Exception e) {
+            System.err.println("Error refreshing report data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

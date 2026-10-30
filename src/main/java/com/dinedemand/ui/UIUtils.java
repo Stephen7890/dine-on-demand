@@ -87,6 +87,7 @@ public class UIUtils {
 
         } catch (Exception e) {
             System.err.println("Fallback to system fonts: " + e.getMessage());
+            e.printStackTrace();
             FONT_HERO = new Font("Segoe UI", Font.BOLD, 28);
             FONT_TITLE = new Font("Segoe UI", Font.BOLD, 20);
             FONT_SUBTITLE = new Font("Segoe UI", Font.BOLD, 16);
@@ -104,6 +105,7 @@ public class UIUtils {
             }
         } catch (Exception e) {
             System.err.println("Could not load font " + resourcePath + ": " + e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -127,6 +129,7 @@ public class UIUtils {
             }
         } catch (Exception e) {
             System.err.println("Error loading image " + path + ": " + e.getMessage());
+            e.printStackTrace();
         }
 
         if (icon == null) {
